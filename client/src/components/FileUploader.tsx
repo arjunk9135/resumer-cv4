@@ -74,81 +74,110 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onUploadComplete }) => {
     setIsDragging(false);
   };
 
-  const handleSubmit = async () => {
-    if (selectedFiles.length === 0) {
-      toast({
-        title: 'No files selected',
-        description: 'Please upload at least one file before submitting.',
-        variant: 'destructive',
-      });
-      return;
-    }
+  // const handleSubmit = async () => {
+  //   if (selectedFiles.length === 0) {
+  //     toast({
+  //       title: 'No files selected',
+  //       description: 'Please upload at least one file before submitting.',
+  //       variant: 'destructive',
+  //     });
+  //     return;
+  //   }
   
-    setIsUploading(true);
-    setUploadProgress(0);
-    setFilesProcessed({ current: 0, total: selectedFiles.length });
-    setUploadSuccess(false);
+  //   setIsUploading(true);
+  //   setUploadProgress(0);
+  //   setFilesProcessed({ current: 0, total: selectedFiles.length });
+  //   setUploadSuccess(false);
+  
+  //   const formData = new FormData();
+  //   formData.append('job_description', 'Project management.'); // <-- Add job_description
+  
+  //   selectedFiles.forEach((file) => {
+  //     formData.append('cvs', file); // API expects `cvs` as repeated key
+  //   });
+  
+  //   try {
+  //     const uploadRes = await fetch('http://localhost:8000/api/analyze-cvs/', {
+  //       method: 'POST',
+  //       body: formData,
+  //     });
+  
+  //     if (!uploadRes.ok) {
+  //       throw new Error('Upload failed');
+  //     }
+  
+  //     let processed = 0;
+  //     const checkStatus = setInterval(async () => {
+  //       try {
+  //         const statusRes = await fetch('http://localhost:8000/api/resumes/status');
+  //         const statusData = await statusRes.json();
+  
+  //         processed = statusData.processed;
+  //         const percent = Math.round((processed / selectedFiles.length) * 100);
+  //         setUploadProgress(percent);
+  //         setFilesProcessed({ current: processed, total: selectedFiles.length });
+  
+  //         if (processed >= selectedFiles.length || statusData.status === 'completed') {
+  //           clearInterval(checkStatus);
+  //           setUploadSuccess(true);
+  //           setSuccessCount(processed);
+  
+  //           setTimeout(() => {
+  //             setIsUploading(false);
+  //             setSelectedFiles([]);
+  //             queryClient.invalidateQueries({ queryKey: ['/api/candidates'] });
+  //             queryClient.invalidateQueries({ queryKey: ['/api/analytics'] });
+  //             onUploadComplete();
+  //           }, 3000);
+  //         }
+  //       } catch {
+  //         clearInterval(checkStatus);
+  //         toast({
+  //           title: 'Error checking status',
+  //           description: 'Failed to check processing status.',
+  //           variant: 'destructive',
+  //         });
+  //       }
+  //     }, 1000);
+  //   } catch {
+  //     setIsUploading(false);
+  //     toast({
+  //       title: 'Upload failed',
+  //       description: 'There was an error uploading your files. Please try again.',
+  //       variant: 'destructive',
+  //     });
+  //   }
+  // };
+  
+  
+  const handleSubmit = async (e:any) => {
+    e.preventDefault();
   
     const formData = new FormData();
-    formData.append('job_description', 'Project management.'); // <-- Add job_description
+    formData.append('job_description', 'Job description'); // Make sure jobDescription is a state variable
   
-    selectedFiles.forEach((file) => {
-      formData.append('cvs', file); // API expects `cvs` as repeated key
-    });
+    // Append all selected files at once (not one-by-one each submit)
+    for (const file of selectedFiles) {
+      formData.append('cvs', file);
+    }
   
     try {
-      const uploadRes = await fetch('http://localhost:8000/api/analyze-cvs/', {
+      const response = await fetch('http://localhost:8000/api/analyze-cvs/', {
         method: 'POST',
         body: formData,
       });
   
-      if (!uploadRes.ok) {
-        throw new Error('Upload failed');
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
   
-      let processed = 0;
-      const checkStatus = setInterval(async () => {
-        try {
-          const statusRes = await fetch('http://localhost:8000/api/resumes/status');
-          const statusData = await statusRes.json();
-  
-          processed = statusData.processed;
-          const percent = Math.round((processed / selectedFiles.length) * 100);
-          setUploadProgress(percent);
-          setFilesProcessed({ current: processed, total: selectedFiles.length });
-  
-          if (processed >= selectedFiles.length || statusData.status === 'completed') {
-            clearInterval(checkStatus);
-            setUploadSuccess(true);
-            setSuccessCount(processed);
-  
-            setTimeout(() => {
-              setIsUploading(false);
-              setSelectedFiles([]);
-              queryClient.invalidateQueries({ queryKey: ['/api/candidates'] });
-              queryClient.invalidateQueries({ queryKey: ['/api/analytics'] });
-              onUploadComplete();
-            }, 3000);
-          }
-        } catch {
-          clearInterval(checkStatus);
-          toast({
-            title: 'Error checking status',
-            description: 'Failed to check processing status.',
-            variant: 'destructive',
-          });
-        }
-      }, 1000);
-    } catch {
-      setIsUploading(false);
-      toast({
-        title: 'Upload failed',
-        description: 'There was an error uploading your files. Please try again.',
-        variant: 'destructive',
-      });
+      const result = await response.json();
+      console.log('Response:', result);
+      // Optionally update state with result
+    } catch (error) {
+      console.error('Error submitting form:', error);
     }
   };
-  
   
 
   const cancelUpload = () => {
