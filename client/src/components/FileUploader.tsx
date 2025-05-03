@@ -90,12 +90,14 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onUploadComplete }) => {
     setUploadSuccess(false);
   
     const formData = new FormData();
+    formData.append('job_description', 'Project management.'); // <-- Add job_description
+  
     selectedFiles.forEach((file) => {
-      formData.append('cvs', file);
+      formData.append('cvs', file); // API expects `cvs` as repeated key
     });
   
     try {
-      const uploadRes = await fetch('http://localhost:8000/api/analyze-cvs', {
+      const uploadRes = await fetch('http://localhost:8000/api/analyze-cvs/', {
         method: 'POST',
         body: formData,
       });
@@ -146,6 +148,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onUploadComplete }) => {
       });
     }
   };
+  
   
 
   const cancelUpload = () => {
